@@ -78,7 +78,11 @@ function App() {
         setTab('log');
     }
 
-    async function saveLog(e) { e.preventDefault(); if (!profile) return; const payload = { athlete_id: profile.id, date: form.date, category: form.category, subtype: form.subtype || null, location: form.location, source: form.source, warmup_minutes: num(form.warmup), main_minutes: num(form.main), cooldown_minutes: num(form.cooldown), rpe: num(form.rpe), notes: form.notes, details: { sets: form.sets, exercises: form.exercises } }; const query = editingId ? db.from('training_sessions').update(payload).eq('id', editingId).eq('athlete_id', profile.id).select('id') : db.from('training_sessions').insert(payload).select('id'); const { data, error } = await query; if (error) return flash(error.message); if (!data?.length) return flash('Session was not saved. Check your permissions.'); flash(editingId ? 'Session updated' : 'Session logged'); setEditingId(null); setTab(editingId ? 'history' : 'home'); await loadSessions(profile.id) }
+
+    async function saveLog(e) {
+        e.preventDefault(); if (!profile) return; if (form.rpe === '' || form.rpe === null || !Number.isInteger(Number(form.rpe)) || Number(form.rpe) < 1 || Number(form.rpe) > 10) return flash('Please enter a session RPE between 1 and 10 before saving.');
+        const payload = { athlete_id: profile.id, date: form.date, category: form.category, subtype: form.subtype || null, location: form.location, source: form.source, warmup_minutes: num(form.warmup), main_minutes: num(form.main), cooldown_minutes: num(form.cooldown), rpe: num(form.rpe), notes: form.notes, details: { sets: form.sets, exercises: form.exercises } }; const query = editingId ? db.from('training_sessions').update(payload).eq('id', editingId).eq('athlete_id', profile.id).select('id') : db.from('training_sessions').insert(payload).select('id'); const { data, error } = await query; if (error) return flash(error.message); if (!data?.length) return flash('Session was not saved. Check your permissions.'); flash(editingId ? 'Session updated' : 'Session logged'); setEditingId(null); setTab(editingId ? 'history' : 'home'); await loadSessions(profile.id)
+    }
 
 
     async function saveTargets() {
